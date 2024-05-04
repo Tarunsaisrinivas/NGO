@@ -38,6 +38,10 @@ app.post('/api/data', async (req, res) => {
   }
 });
 
+app.use("/",(req,res)=>{
+  res.send("hello");
+})
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

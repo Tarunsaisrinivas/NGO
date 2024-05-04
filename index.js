@@ -1,5 +1,3 @@
-// server.js
-
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -34,6 +32,17 @@ app.post('/api/data', async (req, res) => {
     res.status(201).json({ message: 'Data saved successfully' });
   } catch (err) {
     console.error('Error saving data:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// API endpoint for fetching data from the database
+app.get('/api/data', async (req, res) => {
+  try {
+    const dataList = await DataModel.find();
+    res.status(200).json(dataList);
+  } catch (err) {
+    console.error('Error fetching data:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

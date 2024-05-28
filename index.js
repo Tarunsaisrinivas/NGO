@@ -7,7 +7,7 @@ const app = express();
 dotenv.config(); // Load environment variables from .env file
 
 const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env.MONGODB || 'your_default_mongodb_uri_here';
+const MONGODB_URI = process.env.MONGODB ;
 
 // Connect to MongoDB
 mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })

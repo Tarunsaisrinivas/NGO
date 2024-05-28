@@ -1,27 +1,20 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const dotenv = require('dotenv');
-const cors = require('cors');
-
-dotenv.config(); // Load environment variables from .env file
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect('mongodb+srv://tarun:tarunsai2341@cluster0.tbd0fbb.mongodb.net/madhuri?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1); // Exit the process if there's a connection error
-  });
+  .catch(err => console.error('MongoDB connection error:', err));
 
 // Define a schema for your data
 const DataSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  description: { type: String, required: true },
-  location: { type: String, required: true }
+  title: String,
+  description: String,
+  location: String // Renamed from dropdownSelection
 });
 
 // Create a model based on the schema
@@ -29,15 +22,11 @@ const DataModel = mongoose.model('Data', DataSchema);
 
 // Middleware for parsing JSON request bodies
 app.use(bodyParser.json());
-app.use(cors()); // Enable CORS
 
 // API endpoint for saving data to the database
 app.post('/api/data', async (req, res) => {
   try {
-    const { title, description, location } = req.body;
-    if (!title || !description || !location) {
-      return res.status(400).json({ message: 'All fields are required' });
-    }
+    const { title, description, location } = req.body; // Changed dropdownSelection to location
     const newData = new DataModel({ title, description, location });
     await newData.save();
     res.status(201).json({ message: 'Data saved successfully' });

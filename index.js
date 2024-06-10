@@ -1,12 +1,17 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const multer = require('multer');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://tarun:tarunsai2341@cluster0.tbd0fbb.mongodb.net/madhuri?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect('mongodb+srv://tarun:tarunsai2341@cluster0.tbd0fbb.mongodb.net/madhuri?retryWrites=true&w=majority', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
@@ -14,7 +19,8 @@ mongoose.connect('mongodb+srv://tarun:tarunsai2341@cluster0.tbd0fbb.mongodb.net/
 const DataSchema = new mongoose.Schema({
   title: String,
   description: String,
-  location: String // Renamed from dropdownSelection
+  location: String, // Renamed from dropdownSelection
+  imageUrl: String, // New field for image URL
 });
 
 // Create a model based on the schema
@@ -24,7 +30,7 @@ const DataModel = mongoose.model('Data', DataSchema);
 const UserSchema = new mongoose.Schema({
   username: String,
   email: String,
-  password: String // Password stored without hashing (insecure)
+  password: String, // Password stored without hashing (insecure)
 });
 
 // Create a model based on the user schema
@@ -33,11 +39,35 @@ const UserModel = mongoose.model('User', UserSchema);
 // Middleware for parsing JSON request bodies
 app.use(bodyParser.json());
 
+// Setup Multer for image uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({ storage });
+
+// Ensure uploads directory exists
+const fs = require('fs');
+const uploadDir = './uploads';
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+
 // API endpoint for saving data to the database
-app.post('/api/data', async (req, res) => {
+app.post('/api/data', upload.single('image'), async (req, res) => {
   try {
-    const { title, description, location } = req.body; // Changed dropdownSelection to location
-    const newData = new DataModel({ title, description, location });
+    const { title, description, location } = req.body;
+    const newData = new DataModel({
+      title,
+      description,
+      location,
+      imageUrl: req.file ? req.file.path : null, // Save the image path if file is uploaded
+    });
     await newData.save();
     res.status(201).json({ message: 'Data saved successfully' });
   } catch (err) {
@@ -85,6 +115,9 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Root route handler
 app.get('/', (req, res) => {

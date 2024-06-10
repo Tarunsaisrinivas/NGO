@@ -1,6 +1,5 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -14,7 +13,8 @@ mongoose.connect('mongodb+srv://tarun:tarunsai2341@cluster0.tbd0fbb.mongodb.net/
 const DataSchema = new mongoose.Schema({
   title: String,
   description: String,
-  location: String // Renamed from dropdownSelection
+  location: String, // Renamed from dropdownSelection
+  image: String,
 });
 
 // Create a model based on the schema
@@ -22,22 +22,22 @@ const DataModel = mongoose.model('Data', DataSchema);
 
 // Define a schema for user registration
 const UserSchema = new mongoose.Schema({
-  username: String,
-  email: String,
-  password: String // Password stored without hashing (insecure)
+  username: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true } // Password stored without hashing (insecure)
 });
 
 // Create a model based on the user schema
 const UserModel = mongoose.model('User', UserSchema);
 
 // Middleware for parsing JSON request bodies
-app.use(bodyParser.json());
+app.use(express.json()); // Use express.json() instead of body-parser
 
 // API endpoint for saving data to the database
 app.post('/api/data', async (req, res) => {
   try {
-    const { title, description, location } = req.body; // Changed dropdownSelection to location
-    const newData = new DataModel({ title, description, location });
+    const { title, description, location, image } = req.body;
+    const newData = new DataModel({ title, description, location, image });
     await newData.save();
     res.status(201).json({ message: 'Data saved successfully' });
   } catch (err) {

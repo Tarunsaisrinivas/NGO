@@ -13,15 +13,25 @@ mongoose.connect('mongodb+srv://tarun:tarunsai2341@cluster0.tbd0fbb.mongodb.net/
 const DataSchema = new mongoose.Schema({
   title: String,
   description: String,
-  location: String,
+  location: String, // Renamed from dropdownSelection
   image: String,
 });
 
 // Create a model based on the schema
 const DataModel = mongoose.model('Data', DataSchema);
 
+// Define a schema for user registration
+const UserSchema = new mongoose.Schema({
+  username: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true } // Password stored without hashing (insecure)
+});
+
+// Create a model based on the user schema
+const UserModel = mongoose.model('User', UserSchema);
+
 // Middleware for parsing JSON request bodies
-app.use(express.json());
+app.use(express.json()); // Use express.json() instead of body-parser
 
 // API endpoint for saving data to the database
 app.post('/api/data', async (req, res) => {
@@ -43,6 +53,35 @@ app.get('/api/data', async (req, res) => {
     res.status(200).json(dataList);
   } catch (err) {
     console.error('Error fetching data:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// API endpoint for user registration
+app.post('/api/register', async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    const newUser = new UserModel({ username, email, password });
+    await newUser.save();
+    res.status(201).json({ message: 'User registered successfully' });
+  } catch (err) {
+    console.error('Error registering user:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// API endpoint for user login
+app.post('/api/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await UserModel.findOne({ username, password });
+    if (user) {
+      res.status(200).json({ message: 'Login successful' });
+    } else {
+      res.status(401).json({ message: 'Invalid username or password' });
+    }
+  } catch (err) {
+    console.error('Error during login:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

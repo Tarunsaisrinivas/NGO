@@ -13,8 +13,10 @@ mongoose.connect('mongodb+srv://tarun:tarunsai2341@cluster0.tbd0fbb.mongodb.net/
 const DataSchema = new mongoose.Schema({
   title: String,
   description: String,
-  location: String, // Renamed from dropdownSelection
+  location: String,
   image: String,
+  likes: { type: Number, default: 0 },
+  comments: [{ username: String, text: String, date: { type: Date, default: Date.now } }],
 });
 
 // Create a model based on the schema
@@ -24,14 +26,14 @@ const DataModel = mongoose.model('Data', DataSchema);
 const UserSchema = new mongoose.Schema({
   username: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true } // Password stored without hashing (insecure)
+  password: { type: String, required: true }, // Password stored without hashing (insecure)
 });
 
 // Create a model based on the user schema
 const UserModel = mongoose.model('User', UserSchema);
 
 // Middleware for parsing JSON request bodies
-app.use(express.json()); // Use express.json() instead of body-parser
+app.use(express.json());
 
 // API endpoint for saving data to the database
 app.post('/api/data', async (req, res) => {
@@ -82,6 +84,43 @@ app.post('/api/login', async (req, res) => {
     }
   } catch (err) {
     console.error('Error during login:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// API endpoint for liking a post
+app.post('/api/data/:id/like', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await DataModel.findById(id);
+    if (data) {
+      data.likes += 1;
+      await data.save();
+      res.status(200).json({ message: 'Post liked successfully' });
+    } else {
+      res.status(404).json({ message: 'Post not found' });
+    }
+  } catch (err) {
+    console.error('Error liking post:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// API endpoint for commenting on a post
+app.post('/api/data/:id/comment', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { username, text } = req.body;
+    const data = await DataModel.findById(id);
+    if (data) {
+      data.comments.push({ username, text });
+      await data.save();
+      res.status(200).json({ message: 'Comment added successfully' });
+    } else {
+      res.status(404).json({ message: 'Post not found' });
+    }
+  } catch (err) {
+    console.error('Error adding comment:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

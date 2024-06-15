@@ -87,19 +87,27 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-
 // API endpoint for liking a post
 app.post('/api/data/:id/like', async (req, res) => {
   try {
     const { id } = req.params;
+    const { userId } = req.body; // Assuming userId is passed in the request body
     const data = await DataModel.findById(id);
-    if (data) {
-      data.likes += 1;
-      await data.save();
-      res.status(200).json({ message: 'Post liked successfully' });
-    } else {
-      res.status(404).json({ message: 'Post not found' });
+    if (!data) {
+      return res.status(404).json({ message: 'Post not found' });
     }
+
+    // Check if the user has already liked the post
+    if (data.likes.includes(userId)) {
+      return res.status(400).json({ message: 'You have already liked this post' });
+    }
+
+    // Increment likes and add userId to likes array
+    data.likes.push(userId);
+    data.likesCount = data.likes.length;
+
+    await data.save();
+    res.status(200).json({ message: 'Post liked successfully' });
   } catch (err) {
     console.error('Error liking post:', err);
     res.status(500).json({ message: 'Internal server error' });
@@ -110,15 +118,16 @@ app.post('/api/data/:id/like', async (req, res) => {
 app.post('/api/data/:id/comment', async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, text } = req.body;
+    const { userId, text } = req.body; // Assuming userId and text are passed in the request body
     const data = await DataModel.findById(id);
-    if (data) {
-      data.comments.push({ username, text });
-      await data.save();
-      res.status(200).json({ message: 'Comment added successfully' });
-    } else {
-      res.status(404).json({ message: 'Post not found' });
+    if (!data) {
+      return res.status(404).json({ message: 'Post not found' });
     }
+
+    // Add the comment to the post
+    data.comments.push({ userId, text });
+    await data.save();
+    res.status(200).json({ message: 'Comment added successfully' });
   } catch (err) {
     console.error('Error adding comment:', err);
     res.status(500).json({ message: 'Internal server error' });

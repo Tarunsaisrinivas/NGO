@@ -15,7 +15,7 @@ const DataSchema = new mongoose.Schema({
   description: String,
   location: String,
   image: String,
-  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
   likesCount: { type: Number, default: 0 },
   comments: [{ username: String, text: String, date: { type: Date, default: Date.now } }],
 });
@@ -40,7 +40,7 @@ app.use(express.json());
 app.post('/api/data', async (req, res) => {
   try {
     const { title, description, location, image } = req.body;
-    const newData = new DataModel({ title, description, location, image });
+    const newData = new DataModel({ title, description, location, image, likes: [] }); // Initialize likes as an empty array
     await newData.save();
     res.status(201).json({ message: 'Data saved successfully' });
   } catch (err) {
@@ -97,6 +97,10 @@ app.post('/api/data/:id/like', async (req, res) => {
     const data = await DataModel.findById(id);
     if (!data) {
       return res.status(404).json({ message: 'Post not found' });
+    }
+
+    if (!Array.isArray(data.likes)) {
+      data.likes = [];
     }
 
     const index = data.likes.indexOf(userId);

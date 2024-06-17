@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -24,7 +25,6 @@ const DataSchema = new mongoose.Schema({
   }],
 });
 
-
 // Create a model based on the schema
 const DataModel = mongoose.model('Data', DataSchema);
 
@@ -38,14 +38,15 @@ const UserSchema = new mongoose.Schema({
 // Create a model based on the user schema
 const UserModel = mongoose.model('User', UserSchema);
 
-// Middleware for parsing JSON request bodies
+// Middleware for parsing JSON request bodies and CORS
 app.use(express.json());
+app.use(cors());
 
 // API endpoint for saving data to the database
 app.post('/api/data', async (req, res) => {
   try {
     const { title, description, location, image } = req.body;
-    const newData = new DataModel({ title, description, location, image, likes: [] }); // Initialize likes as an empty array
+    const newData = new DataModel({ title, description, location, image, likes: [] });
     await newData.save();
     res.status(201).json({ message: 'Data saved successfully' });
   } catch (err) {
@@ -104,10 +105,6 @@ app.post('/api/data/:id/like', async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    if (!Array.isArray(data.likes)) {
-      data.likes = [];
-    }
-
     const index = data.likes.indexOf(userId);
     if (index === -1) {
       data.likes.push(userId);
@@ -127,11 +124,15 @@ app.post('/api/data/:id/like', async (req, res) => {
 });
 
 // API endpoint for commenting on a post
-// API endpoint for commenting on a post
 app.post('/api/data/:id/comment', async (req, res) => {
   try {
     const { id } = req.params;
-    const { text } = req.body; // Assuming you only need text for the comment
+    const { username, text } = req.body;
+
+    // Validate input
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ message: 'Invalid comment text' });
+    }
 
     // Find the post by its ID
     const data = await DataModel.findById(id);
@@ -139,8 +140,8 @@ app.post('/api/data/:id/comment', async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    // Update the comments array in the found post
-    data.comments.push({ username: 'User', text }); // Assuming 'User' is the comment author
+    // Add the comment to the comments array
+    data.comments.push({ username, text });
     await data.save();
 
     // Return success response
@@ -150,8 +151,6 @@ app.post('/api/data/:id/comment', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-
-
 
 // Root route handler
 app.get('/', (req, res) => {

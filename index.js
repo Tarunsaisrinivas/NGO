@@ -122,16 +122,17 @@ app.post('/api/data/:id/like', async (req, res) => {
 });
 
 // API endpoint for commenting on a post
+// API endpoint for commenting on a post
 app.post('/api/data/:id/comment', async (req, res) => {
   try {
     const { id } = req.params;
-    const { userId, text } = req.body;
+    const { text } = req.body; // Assuming you only need text for the comment
     const data = await DataModel.findById(id);
     if (!data) {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    data.comments.push({ userId, text });
+    data.comments.push({ text }); // Add the comment to the comments array
     await data.save();
     res.status(200).json({ message: 'Comment added successfully' });
   } catch (err) {
@@ -139,6 +140,7 @@ app.post('/api/data/:id/comment', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 // Root route handler
 app.get('/', (req, res) => {

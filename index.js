@@ -17,8 +17,13 @@ const DataSchema = new mongoose.Schema({
   image: String,
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
   likesCount: { type: Number, default: 0 },
-  comments: [{ username: String, text: String, date: { type: Date, default: Date.now } }],
+  comments: [{
+    username: String,
+    text: String,
+    date: { type: Date, default: Date.now }
+  }],
 });
+
 
 // Create a model based on the schema
 const DataModel = mongoose.model('Data', DataSchema);
@@ -127,19 +132,25 @@ app.post('/api/data/:id/comment', async (req, res) => {
   try {
     const { id } = req.params;
     const { text } = req.body; // Assuming you only need text for the comment
+
+    // Find the post by its ID
     const data = await DataModel.findById(id);
     if (!data) {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    data.comments.push({ text }); // Add the comment to the comments array
+    // Update the comments array in the found post
+    data.comments.push({ username: 'User', text }); // Assuming 'User' is the comment author
     await data.save();
+
+    // Return success response
     res.status(200).json({ message: 'Comment added successfully' });
   } catch (err) {
     console.error('Error adding comment:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 
 // Root route handler

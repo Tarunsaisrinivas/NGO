@@ -16,8 +16,8 @@ const DataSchema = new mongoose.Schema({
   description: String,
   location: String,
   image: String,
-  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
-  likesCount: { type: Number, default: 0 },
+  // likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
+  // likesCount: { type: Number, default: 0 },
   comments: [
     {
       // user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -49,7 +49,7 @@ app.use(cors());
 app.post('/api/data', async (req, res) => {
   try {
     const { title, description, location, image } = req.body;
-    const newData = new DataModel({ title, description, location, image, likes: [] });
+    const newData = new DataModel({ title, description, location, image});
     await newData.save();
     res.status(201).json({ message: 'Data saved successfully' });
   } catch (err) {
@@ -103,32 +103,32 @@ app.post('/api/login', async (req, res) => {
 });
 
 // API endpoint for liking a post
-app.post('/api/data/:id/like', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { userId } = req.body;
-    const data = await DataModel.findById(id);
-    if (!data) {
-      return res.status(404).json({ message: 'Post not found' });
-    }
+// app.post('/api/data/:id/like', async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { userId } = req.body;
+//     const data = await DataModel.findById(id);
+//     if (!data) {
+//       return res.status(404).json({ message: 'Post not found' });
+//     }
 
-    const index = data.likes.indexOf(userId);
-    if (index === -1) {
-      data.likes.push(userId);
-      data.likesCount = data.likes.length;
-      await data.save();
-      return res.status(200).json({ message: 'Post liked successfully' });
-    } else {
-      data.likes.splice(index, 1);
-      data.likesCount = data.likes.length;
-      await data.save();
-      return res.status(200).json({ message: 'Post unliked successfully' });
-    }
-  } catch (err) {
-    console.error('Error liking post:', err);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
+//     const index = data.likes.indexOf(userId);
+//     if (index === -1) {
+//       data.likes.push(userId);
+//       data.likesCount = data.likes.length;
+//       await data.save();
+//       return res.status(200).json({ message: 'Post liked successfully' });
+//     } else {
+//       data.likes.splice(index, 1);
+//       data.likesCount = data.likes.length;
+//       await data.save();
+//       return res.status(200).json({ message: 'Post unliked successfully' });
+//     }
+//   } catch (err) {
+//     console.error('Error liking post:', err);
+//     res.status(500).json({ message: 'Internal server error' });
+//   }
+// });
 
 // API endpoint for adding a comment to a post
 app.post('/api/data/:id/comment', async (req, res) => {

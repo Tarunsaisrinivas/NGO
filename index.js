@@ -131,6 +131,8 @@ app.post('/api/data/:id/comment', async (req, res) => {
     const { id } = req.params;
     const { userId, comment } = req.body;
     console.log(id,userId,comment);
+    const data = {id,userId,comment}
+    return res.json({data:data})
     // const data = await DataModel.findById(id);
     // if (!data) {
     //   return res.status(404).json({ message: 'Post not found' });

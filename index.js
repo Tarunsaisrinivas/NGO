@@ -139,16 +139,16 @@ app.post('/api/data/:id/comment', async (req, res) => {
     if (!data) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    console.log(id,data);
-    // const newComment = {
-    //   user: userId,
-    //   comment: comment,
-    //   timestamp: new Date()
-    // };
+  
+    const newComment = {
+      user: name,
+      comment: comment,
+      timestamp: new Date()
+    };
 
-    // data.comments.push(newComment);
-    // await data.save();
-    // res.status(201).json({ message: 'Comment added successfully' });
+    data.comments.push(newComment);
+    await data.save();
+    res.status(201).json({ message: 'Comment added successfully' });
   } catch (err) {
     console.error('Error adding comment:', err);
     res.status(500).json({ message: 'Internal server error' });

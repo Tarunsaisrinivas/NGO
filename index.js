@@ -20,7 +20,8 @@ const DataSchema = new mongoose.Schema({
   likesCount: { type: Number, default: 0 },
   comments: [
     {
-      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      // user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      user:String,
       comment: String,
       timestamp: { type: Date, default: Date.now }
     }
@@ -134,14 +135,11 @@ app.post('/api/data/:id/comment', async (req, res) => {
   try {
     const { id } = req.params;
     const {  comment } = req.body;
-    console.log(id,comment);
-    const data = {id,username:name,comment}
-    return res.json({data:data})
-    // const data = await DataModel.findById(id);
-    // if (!data) {
-    //   return res.status(404).json({ message: 'Post not found' });
-    // }
-
+    const data = await DataModel.findById(id);
+    if (!data) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    console.log(id,data);
     // const newComment = {
     //   user: userId,
     //   comment: comment,

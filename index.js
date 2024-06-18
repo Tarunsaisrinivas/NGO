@@ -82,10 +82,14 @@ app.post('/api/register', async (req, res) => {
 });
 
 // API endpoint for user login
+let name;
 app.post('/api/login', async (req, res) => {
   try {
+    
     const { username, password } = req.body;
+    name = username;
     const user = await UserModel.findOne({ username, password });
+    
     if (user) {
       res.status(200).json({ message: 'Login successful' });
     } else {
@@ -129,9 +133,9 @@ app.post('/api/data/:id/like', async (req, res) => {
 app.post('/api/data/:id/comment', async (req, res) => {
   try {
     const { id } = req.params;
-    const { userId, comment } = req.body;
-    console.log(id,userId,comment);
-    const data = {id,userId,comment}
+    const {  comment } = req.body;
+    console.log(id,comment);
+    const data = {id,username:name,comment}
     return res.json({data:data})
     // const data = await DataModel.findById(id);
     // if (!data) {

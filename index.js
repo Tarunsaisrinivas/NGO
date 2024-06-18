@@ -18,11 +18,13 @@ const DataSchema = new mongoose.Schema({
   image: String,
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
   likesCount: { type: Number, default: 0 },
-  comments: [{
-    username: String,
-    text: String,
-    date: { type: Date, default: Date.now }
-  }],
+  comments: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      comment: String,
+      timestamp: { type: Date, default: Date.now }
+    }
+  ]
 });
 
 // Create a model based on the schema
@@ -58,7 +60,7 @@ app.post('/api/data', async (req, res) => {
 // API endpoint for fetching data from the database
 app.get('/api/data', async (req, res) => {
   try {
-    const dataList = await DataModel.find();
+    const dataList = await DataModel.find().populate('comments.user', 'username');
     res.status(200).json(dataList);
   } catch (err) {
     console.error('Error fetching data:', err);
@@ -123,46 +125,27 @@ app.post('/api/data/:id/like', async (req, res) => {
   }
 });
 
-// API endpoint for commenting on a post
+// API endpoint for adding a comment to a post
 app.post('/api/data/:id/comment', async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, text } = req.body;
-
-    // Validate input
-    if (!text || typeof text !== 'string') {
-      return res.status(400).json({ message: 'Invalid comment text' });
-    }
-
-    // Find the post by its ID
+    const { userId, comment } = req.body;
     const data = await DataModel.findById(id);
     if (!data) {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    // Add the comment to the comments array
-    data.comments.push({ username, text });
-    await data.save();
+    const newComment = {
+      user: userId,
+      comment: comment,
+      timestamp: new Date()
+    };
 
-    // Return success response
-    res.status(200).json({ message: 'Comment added successfully' });
+    data.comments.push(newComment);
+    await data.save();
+    res.status(201).json({ message: 'Comment added successfully' });
   } catch (err) {
     console.error('Error adding comment:', err);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-// API endpoint for fetching comments of a post
-app.get('/api/data/:id/comments', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const data = await DataModel.findById(id).select('comments');
-    if (!data) {
-      return res.status(404).json({ message: 'Post not found' });
-    }
-    res.status(200).json(data.comments);
-  } catch (err) {
-    console.error('Error fetching comments:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

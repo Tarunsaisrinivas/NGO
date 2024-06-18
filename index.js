@@ -152,6 +152,20 @@ app.post('/api/data/:id/comment', async (req, res) => {
   }
 });
 
+// API endpoint for fetching comments of a post
+app.get('/api/data/:id/comments', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await DataModel.findById(id).select('comments');
+    if (!data) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    res.status(200).json(data.comments);
+  } catch (err) {
+    console.error('Error fetching comments:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // Root route handler
 app.get('/', (req, res) => {

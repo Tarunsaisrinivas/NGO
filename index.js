@@ -170,6 +170,25 @@ app.post("/api/data/:id/comment", async (req, res) => {
   }
 });
 
+// API endpoint for fetching user data
+app.get("/api/user", async (req, res) => {
+  try {
+    const user = await UserModel.findOne({ username: name }); // Assuming `name` is set globally after login
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const userData = {
+      username: user.username,
+      email: user.email,
+    };
+    res.status(200).json(userData);
+  } catch (err) {
+    console.error("Error fetching user data:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
 // Root route handler
 app.get("/", (req, res) => {
   res.send("Hello from Express server!");

@@ -22,8 +22,11 @@ const DataSchema = new mongoose.Schema({
   image: String,
   district: String,
   mandal: String,
+  // likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
+  // likesCount: { type: Number, default: 0 },
   comments: [
     {
+      // user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
       user: String,
       comment: String,
       timestamp: { type: Date, default: Date.now },
@@ -96,14 +99,14 @@ app.post("/api/register", async (req, res) => {
 });
 
 // API endpoint for user login
-let loggedInUsername;
+let name;
 app.post("/api/login", async (req, res) => {
   try {
     const { username, password } = req.body;
+    name = username;
     const user = await UserModel.findOne({ username, password });
 
     if (user) {
-      loggedInUsername = username;
       res.status(200).json({ message: "Login successful" });
     } else {
       res.status(401).json({ message: "Invalid username or password" });
@@ -114,28 +117,33 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// API endpoint for updating user profile (username and email)
-app.put("/api/updateProfile", async (req, res) => {
-  try {
-    const { username, email } = req.body;
+// API endpoint for liking a post
+// app.post('/api/data/:id/like', async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { userId } = req.body;
+//     const data = await DataModel.findById(id);
+//     if (!data) {
+//       return res.status(404).json({ message: 'Post not found' });
+//     }
 
-    // Find the user by the logged in username
-    const updatedUser = await UserModel.findOneAndUpdate(
-      { username: loggedInUsername },
-      { $set: { username, email } },
-      { new: true }
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json({ message: "Profile updated successfully" });
-  } catch (err) {
-    console.error("Error updating profile:", err);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
+//     const index = data.likes.indexOf(userId);
+//     if (index === -1) {
+//       data.likes.push(userId);
+//       data.likesCount = data.likes.length;
+//       await data.save();
+//       return res.status(200).json({ message: 'Post liked successfully' });
+//     } else {
+//       data.likes.splice(index, 1);
+//       data.likesCount = data.likes.length;
+//       await data.save();
+//       return res.status(200).json({ message: 'Post unliked successfully' });
+//     }
+//   } catch (err) {
+//     console.error('Error liking post:', err);
+//     res.status(500).json({ message: 'Internal server error' });
+//   }
+// });
 
 // API endpoint for adding a comment to a post
 app.post("/api/data/:id/comment", async (req, res) => {
@@ -148,8 +156,8 @@ app.post("/api/data/:id/comment", async (req, res) => {
     }
 
     const newComment = {
-      user: loggedInUsername,
-      comment,
+      user: name,
+      comment: comment,
       timestamp: new Date(),
     };
 
@@ -165,7 +173,7 @@ app.post("/api/data/:id/comment", async (req, res) => {
 // API endpoint for fetching user data
 app.get("/api/user", async (req, res) => {
   try {
-    const user = await UserModel.findOne({ username: loggedInUsername });
+    const user = await UserModel.findOne({ username: name }); // Assuming `name` is set globally after login
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -179,6 +187,7 @@ app.get("/api/user", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 // Root route handler
 app.get("/", (req, res) => {

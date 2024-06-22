@@ -22,6 +22,7 @@ const DataSchema = new mongoose.Schema({
   image: String,
   district: String,
   mandal: String,
+  createdAt: { type: Date, default: Date.now }, // Add this line
   // likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
   // likesCount: { type: Number, default: 0 },
   comments: [

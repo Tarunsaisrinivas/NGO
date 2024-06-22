@@ -1,14 +1,18 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://tarun:tarunsai2341@cluster0.tbd0fbb.mongodb.net/madhuri?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+mongoose
+  .connect(
+    "mongodb+srv://tarun:tarunsai2341@cluster0.tbd0fbb.mongodb.net/madhuri?retryWrites=true&w=majority",
+    { useNewUrlParser: true, useUnifiedTopology: true }
+  )
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
 // Define a schema for your data
 const DataSchema = new mongoose.Schema({
@@ -16,20 +20,22 @@ const DataSchema = new mongoose.Schema({
   description: String,
   location: String,
   image: String,
+  district: String,
+  mandal: String,
   // likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
   // likesCount: { type: Number, default: 0 },
   comments: [
     {
       // user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      user:String,
+      user: String,
       comment: String,
-      timestamp: { type: Date, default: Date.now }
-    }
-  ]
+      timestamp: { type: Date, default: Date.now },
+    },
+  ],
 });
 
 // Create a model based on the schema
-const DataModel = mongoose.model('Data', DataSchema);
+const DataModel = mongoose.model("Data", DataSchema);
 
 // Define a schema for user registration
 const UserSchema = new mongoose.Schema({
@@ -39,66 +45,75 @@ const UserSchema = new mongoose.Schema({
 });
 
 // Create a model based on the user schema
-const UserModel = mongoose.model('User', UserSchema);
+const UserModel = mongoose.model("User", UserSchema);
 
 // Middleware for parsing JSON request bodies and CORS
 app.use(express.json());
 app.use(cors());
 
 // API endpoint for saving data to the database
-app.post('/api/data', async (req, res) => {
+app.post("/api/data", async (req, res) => {
   try {
-    const { title, description, location, image } = req.body;
-    const newData = new DataModel({ title, description, location, image});
+    const { title, description, location, image, district, mandal } = req.body;
+    const newData = new DataModel({
+      title,
+      description,
+      location,
+      image,
+      district,
+      mandal,
+    });
     await newData.save();
-    res.status(201).json({ message: 'Data saved successfully' });
+    res.status(201).json({ message: "Data saved successfully" });
   } catch (err) {
-    console.error('Error saving data:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error saving data:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
 // API endpoint for fetching data from the database
-app.get('/api/data', async (req, res) => {
+app.get("/api/data", async (req, res) => {
   try {
-    const dataList = await DataModel.find().populate('comments.user', 'username');
+    const dataList = await DataModel.find().populate(
+      "comments.user",
+      "username"
+    );
     res.status(200).json(dataList);
   } catch (err) {
-    console.error('Error fetching data:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching data:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
 // API endpoint for user registration
-app.post('/api/register', async (req, res) => {
+app.post("/api/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
     const newUser = new UserModel({ username, email, password });
     await newUser.save();
-    res.status(201).json({ message: 'User registered successfully' });
+    res.status(201).json({ message: "User registered successfully" });
   } catch (err) {
-    console.error('Error registering user:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error registering user:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
 // API endpoint for user login
 let name;
-app.post('/api/login', async (req, res) => {
+app.post("/api/login", async (req, res) => {
   try {
-    
     const { username, password } = req.body;
     name = username;
     const user = await UserModel.findOne({ username, password });
-    
+
     if (user) {
-      res.status(200).json({ message: 'Login successful' });
+      res.status(200).json({ message: "Login successful" });
     } else {
-      res.status(401).json({ message: 'Invalid username or password' });
+      res.status(401).json({ message: "Invalid username or password" });
     }
   } catch (err) {
-    console.error('Error during login:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error during login:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -131,33 +146,33 @@ app.post('/api/login', async (req, res) => {
 // });
 
 // API endpoint for adding a comment to a post
-app.post('/api/data/:id/comment', async (req, res) => {
+app.post("/api/data/:id/comment", async (req, res) => {
   try {
     const { id } = req.params;
-    const {  comment } = req.body;
+    const { comment } = req.body;
     const data = await DataModel.findById(id);
     if (!data) {
-      return res.status(404).json({ message: 'Post not found' });
+      return res.status(404).json({ message: "Post not found" });
     }
-  
+
     const newComment = {
       user: name,
       comment: comment,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     data.comments.push(newComment);
     await data.save();
-    res.status(201).json({ message: 'Comment added successfully' });
+    res.status(201).json({ message: "Comment added successfully" });
   } catch (err) {
-    console.error('Error adding comment:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error adding comment:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
 // Root route handler
-app.get('/', (req, res) => {
-  res.send('Hello from Express server!');
+app.get("/", (req, res) => {
+  res.send("Hello from Express server!");
 });
 
 // Start the server
